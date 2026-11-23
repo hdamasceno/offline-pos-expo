@@ -60,6 +60,16 @@ describe('SyncEngine', () => {
     expect(inventory.stockOf('A')).toBe(8);
   });
 
+  it('skips the backoff wait on syncNow', async () => {
+    const { engine, net } = setup();
+    net.setOnline(false);
+    await engine.enqueue(makeSale([['A', 1]]));
+    await engine.flush();
+    expect(engine.nextDueIn()).toBeGreaterThan(0);
+    net.setOnline(true);
+    expect(await engine.syncNow()).toEqual({ sent: 1, failed: 0, remaining: 0 });
+  });
+
   it('grows the delay with each failed attempt and honours Retry-After', async () => {
     const { engine, net, clock, inventory } = setup();
     net.setOnline(false);

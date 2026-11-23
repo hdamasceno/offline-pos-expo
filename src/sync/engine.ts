@@ -173,6 +173,17 @@ export class SyncEngine {
     return this.inflight;
   }
 
+  /** A person pressed "Sync now" (or the network came back): skip any backoff wait. */
+  syncNow(): Promise<FlushResult> {
+    const now = this.clock.now();
+    this.set({
+      outbox: this.state.outbox.map((e) =>
+        e.status === 'pending' && e.nextAttemptAt > now ? { ...e, nextAttemptAt: now } : e,
+      ),
+    });
+    return this.flush();
+  }
+
   async retryFailed(saleId: string): Promise<void> {
     this.updateEntry(saleId, (e) => ({ ...e, status: 'pending', attempts: 0, nextAttemptAt: this.clock.now() }));
     await this.persist();

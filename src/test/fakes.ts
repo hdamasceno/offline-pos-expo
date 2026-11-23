@@ -32,7 +32,7 @@ export function seeded(seed: number): () => number {
 }
 
 let n = 0;
-export function makeSale(lines: Array<[sku: string, qty: number]>, id = `sale-${String(++n).padStart(6, '0')}`): Sale {
+export function makeSale(lines: [sku: string, qty: number][], id = `sale-${String(++n).padStart(6, '0')}`): Sale {
   const saleLines = lines.map(([sku, qty]) => ({ sku, qty, unitPrice: 100, net: 100 * qty, tax: 0 }));
   const total = saleLines.reduce((s, l) => s + l.net, 0);
   return { id, createdAt: '2026-05-04T09:00:00.000Z', lines: saleLines, total, tax: 0 };

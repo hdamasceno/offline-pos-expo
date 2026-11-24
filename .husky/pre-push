@@ -1,0 +1,5 @@
+# Runs before every push: the slower test suites.
+# 1. Unit and screen tests (Jest).
+npm test -- --ci
+# 2. End-to-end tests on the Expo web build (Playwright; first run needs: npx playwright install chromium).
+npm run test:e2e

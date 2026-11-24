@@ -117,8 +117,30 @@ See [`.env.example`](.env.example) for every variable. None of them is secret.
 | `npm run coverage` | the same, with coverage (about 94% of lines) |
 | `npm run test:e2e` | 3 Playwright tests on the Expo **web** build: the offline sale flow, a queued sale surviving a reload, and the phone layout |
 | `npm run screenshots` | regenerates the images in `docs/` |
+| `npm run check:secrets` | secret scan of the staged files (`-- --all` for every tracked file) |
+| `npm run test:hooks` | tests for the secret scanner (`node --test`) |
 
-CI runs lint, typecheck and unit tests, then the Playwright suite, on every push and pull request.
+CI runs a secret scan, lint, typecheck and unit tests, then the Playwright suite, on every push and pull request.
+
+### Git hooks
+
+`npm install` sets up [Husky](https://typicode.github.io/husky/) hooks, so the checks CI runs
+also run locally, before anything leaves your machine:
+
+| Hook | Runs | Why |
+| --- | --- | --- |
+| `pre-commit` | secret scan, then lint, then typecheck | stop private keys, tokens and `.env` files before they are in history |
+| `pre-push` | unit and screen tests (Jest), then Playwright end-to-end tests on the Expo web build | do not push a branch that CI will reject |
+
+The secret scan (`scripts/check-secrets.mjs`, no dependencies) blocks `.env` files (except
+`.env.example`), key and certificate files (`.pem`, `.key`, `.p8`, `.p12`, `.jks`, SSH keys), and
+content that looks like a private key, cloud or API token, or a connection string with a password
+for a non-local host. It only reads the staged version of each file and never prints the value it
+found. If [gitleaks](https://github.com/gitleaks/gitleaks) is installed it runs too, as a second
+opinion. A false positive can be allowed with a `secret-scan: allow` comment on that line.
+
+In an emergency `git commit --no-verify` skips the hooks; CI still runs the same secret scan, plus
+gitleaks over the full history, on every push and pull request.
 
 ## Not included, on purpose
 
